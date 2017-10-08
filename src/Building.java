@@ -18,7 +18,7 @@ public class Building{
 
     void displayCity() {
         parent.fill(color);
-        parent.rect(xpos, ypos, SIZE, SIZE);
+        parent.rect(xpos, ypos, SIZE, SIZE, 4);
     }
 
 }
