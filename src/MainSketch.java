@@ -16,6 +16,7 @@ public class MainSketch extends PApplet {
     private final static int PARTICLE_FREQUENCY = 30;
     private final static int BUILDINGS = 6;
     private final static int BUILDING_SIZE = 50;
+    private final float restitution = 1;
     private int n_particles = 100;
     private int n_missles = new Double(n_particles * 1.5f).intValue();
 
@@ -23,6 +24,8 @@ public class MainSketch extends PApplet {
     private ArrayList<Particle> particles;
     private ArrayList<Building> buildings;
     private ArrayList<Missile> missiles;
+    private ContactResolver contactResolver;
+    private ArrayList missile_contacts;
     private int draw_counter = 0;
     private boolean playing = true;
 
@@ -36,10 +39,11 @@ public class MainSketch extends PApplet {
     }
 
     public void setup() {
-        background(255);
         particles = new ArrayList<>();
         buildings = new ArrayList<>();
         missiles = new ArrayList<>();
+        contactResolver = new ContactResolver();
+        missile_contacts = new ArrayList<>();
         int building_xstep = 25;
         for (int i = 0; i < BUILDINGS; i++) {
             buildings.add(new Building(this,
@@ -61,25 +65,26 @@ public class MainSketch extends PApplet {
         PShape tower = createShape(ARC, MY_WIDTH/2, SURFACE_YPOS - 30, 50, 50, PI, 2*PI);
         tower.setFill(color(21, 223, 12));
         tower.setStroke(false);
-        PShape silo = createShape();
+        PShape silo = createShape(ELLIPSE, MY_WIDTH/2, SURFACE_YPOS - 30, 20, 20);
+        silo.setFill(color(255, 255, 255));
+        silo.setStroke(false);
 
         gun.addChild(base);
         gun.addChild(tower);
+        gun.addChild(silo);
     }
 
     public void draw() {
         draw_counter++;
-        background(255);
+        background(240,255,255);
         stroke(204, 102, 0);
         strokeWeight(3);
         line(0, SURFACE_YPOS, MY_WIDTH, SURFACE_YPOS);
         noStroke();
-        fill(123,32,65);
+
 
         if (draw_counter % PARTICLE_FREQUENCY == 0)
             createParticle();
-
-        processParticle();
 
         buildings.forEach(Building::displayCity);
 
@@ -87,9 +92,19 @@ public class MainSketch extends PApplet {
 
         displayText();
 
-        if (!missiles.isEmpty()) {
-            missiles.forEach(Missile::shoot);
-        }
+//        if (!missiles.isEmpty()) {
+//            missiles.forEach(Missile::shoot);
+//            for (int i = 0; i < particles.size(); i++) {
+//                for (int j = 0; j < missiles.size(); j++) {
+//                    Contact contact = detectCollision(particles.get(i), missiles.get(j));
+//                    if (contact != null) missile_contacts.add(contact);
+//                }
+//            }
+//            contactResolver.resolveContacts(missile_contacts);
+//        processParticle();
+//        missile_contacts.clear();
+        processObjectBehaviour();
+//        }
 
     }
 
@@ -103,17 +118,36 @@ public class MainSketch extends PApplet {
         }
     }
 
-    private void processParticle() {
-        for (int i = 0; i < particles.size() - 1; i++) {
+    private void processObjectBehaviour() {
+        for (int i = 0; i < particles.size(); i++) {
+            for (int j = 0; j < missiles.size(); j++) {
+                if (missiles.get(j).explode) {
+                    Contact contact = detectCollision(particles.get(i), missiles.get(j));
+                    if (contact != null) {
+                        missile_contacts.add(contact);
+                    }
+                }
+            }
+            contactResolver.resolveContacts(missile_contacts);
             particles.get(i).integrate();
-            PVector position = particles.get(i).position;
-            float mass = particles.get(i).getMass();
-            ellipse(position.x, position.y, 15 + (mass * 0.01f), 15 + (mass * 0.01f));
+//            missiles.forEach(Missile::shoot);
+            missile_contacts.clear();
+            particles.get(i).setSize((int) (particles.get(i).getMass() * 0.01f) + 15);
+            particles.get(i).displayParticle();
+//            missiles.forEach(Missile::displayMissile);
             if (particles.get(i).cease_existance) {
                 player_score += 100;
                 particles.remove(i);
                 n_particles--;
             }
+        }
+        for (int i = 0; i < missiles.size(); i++) {
+            if (missiles.get(i).vanish) {
+                missiles.remove(i);
+                continue;
+            }
+            missiles.get(i).shoot();
+            missiles.get(i).displayMissile();
         }
     }
 
@@ -142,10 +176,20 @@ public class MainSketch extends PApplet {
         PVector destination = new PVector(mouseX, mouseY);
         PVector acceleration = destination.sub(origin);
         acceleration.normalize();
-        acceleration.mult(5);
-        missiles.add(new Missile(this, origin, acceleration, origin));
+        acceleration.mult(6);
+        missiles.add(new Missile(this, origin, acceleration, origin, new PVector(mouseX, mouseY)));
     }
 
+    private Contact detectCollision(Particle p, Missile m) {
+        PVector distance = p.position.copy() ;
+        distance.sub(m.position);
 
+        // Collision?
+        if (distance.mag() < m.expl_size) {
+            distance.normalize() ;
+            return new Contact(this, p, m, restitution, distance) ;
+        }
+        return null ;
+    }
 
 }

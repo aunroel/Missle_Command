@@ -2,8 +2,8 @@ import processing.core.*;
 
 public class Contact {
     // The two particles in contact
-    Particle p1 ;
-    Particle p2 ;
+    Particle p ;
+    Missile m ;
 
     // Coefficient of restitution
     float c ;
@@ -15,10 +15,10 @@ public class Contact {
 
 
     // Construct a new Contact from the given parameters
-    public Contact (PApplet p, Particle p1, Particle p2, float c, PVector contactNormal) {
+    public Contact (PApplet p, Particle p1, Missile m, float c, PVector contactNormal) {
         parent = p;
-        this.p1 = p1 ;
-        this.p2 = p2 ;
+        this.p = p1 ;
+        this.m = m ;
         this.c = c ;
         this.contactNormal = contactNormal ;
     }
@@ -31,8 +31,8 @@ public class Contact {
     // Calculate the separating velocity for this contact
     // This is just the simplified form of the closing velocity eqn
     float calculateSeparatingVelocity() {
-        PVector relativeVelocity = p1.velocity.copy() ;
-        relativeVelocity.sub(p2.velocity) ;
+        PVector relativeVelocity = p.velocity.copy() ;
+        relativeVelocity.sub(m.impulse) ;
         return relativeVelocity.dot(contactNormal) ;
     }
 
@@ -49,28 +49,28 @@ public class Contact {
 
         // Apply change in velocity to each object in proportion inverse mass.
         // i.e. lower inverse mass (higher actual mass) means less change to vel.
-        float totalInverseMass = p1.invMass ;
-        totalInverseMass += p2.invMass ;
+        float totalInverseMass = p.invMass ;
+        totalInverseMass += m.INV_MASS ;
 
         // Calculate impulse to apply
-        float impulse = deltaVelocity / totalInverseMass ;
+        float impulse = deltaVelocity / totalInverseMass * 2 ;
 
         // Find the amount of impulse per unit of inverse mass
         PVector impulsePerIMass = contactNormal.copy() ;
         impulsePerIMass.mult(impulse) ;
 
         // Calculate the p1 impulse
-        PVector p1Impulse = impulsePerIMass.copy() ;
-        p1Impulse.mult(p1.invMass) ;
+        PVector pImpulse = impulsePerIMass.copy() ;
+        pImpulse.mult(p.invMass) ;
 
         // Calculate the p2 impulse
         // NB Negate this one because it is in the opposite direction
-        PVector p2Impulse = impulsePerIMass.copy() ;
-        p2Impulse.mult(-p2.invMass) ;
+//        PVector p2Impulse = impulsePerIMass.copy() ;
+//        p2Impulse.mult(-m.INV_MASS) ;
 
         // Apply impulses. They are applied in the direction of contact, proportional
         //  to inverse mass
-        p1.velocity.add(p1Impulse) ;
-        p2.velocity.add(p2Impulse) ;
+        p.velocity.add(pImpulse) ;
+//        m.velocity.add(p2Impulse) ;
     }
 }

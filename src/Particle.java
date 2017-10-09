@@ -10,6 +10,7 @@ public class Particle {
     public final PVector position, velocity;
     public float invMass;
     public boolean cease_existance = false;
+    public int size = 0;
 
     public Particle(PApplet p, PVector pos, PVector vel, float invM) {
         parent = p;
@@ -32,6 +33,16 @@ public class Particle {
         if (position.x < 0 || position.x > parent.width) {
             cease_existance = !cease_existance;
         }
+    }
 
+    public void displayParticle() {
+        parent.fill(parent.color(123,32,65));
+        parent.ellipse(position.x, position.y, size, size);
+        parent.noFill();
+
+    }
+
+    public void setSize(int size) {
+        this.size = size;
     }
 }
