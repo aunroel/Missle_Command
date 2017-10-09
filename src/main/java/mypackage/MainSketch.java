@@ -148,7 +148,7 @@ public class MainSketch extends PApplet {
         text("Missiles left: " + (n_missiles - missiles.size()), MY_WIDTH * 0.05f, SURFACE_YPOS + 50);
         text("Cities left: " + (CITIES_AMOUNT - destroyed_cities.size()), MY_WIDTH * 0.05f, SURFACE_YPOS + 75);
         text("Wave " + wave_counter, MY_WIDTH * 0.7f, SURFACE_YPOS + 100);
-        text("mypackage.City rebuild price: " + city_rebuild_price, MY_WIDTH * 0.05f, SURFACE_YPOS + 100);
+        text("City rebuild price: " + city_rebuild_price, MY_WIDTH * 0.05f, SURFACE_YPOS + 100);
 
     }
 
